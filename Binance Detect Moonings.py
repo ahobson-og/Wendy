@@ -1,11 +1,11 @@
 """
-Olorin Sledge Fork
-Version: 1.14
+Omaha Group Fork
+Version: Wendy 1.0
 
 Disclaimer
 
 All investment strategies and investments involve risk of loss.
-Nothing contained in this program, scripts, code or repositoy should be
+Nothing contained in this program, scripts, code or repository should be
 construed as investment advice.Any reference to an investment's past or
 potential performance is not, and should not be construed as, a recommendation
 or as a guarantee of any specific outcome or profit.
@@ -14,7 +14,7 @@ By using this program you accept all liabilities,
 and that no claims can be made against the developers,
 or others connected with the program.
 
-See requirements.txt for versions of modules needed
+See requirements.txt for versions of modules needed:
 
 Notes:
 - Requires Python version 3.9.x to run
@@ -29,7 +29,7 @@ Functionality:
 - Better reporting in trades.txt
 - A history.txt that records state of bot every minute (useful for past analysis /charting)
 - Better error trapping on certain exceptions
-- BNB is no longer used as the reference for TIME_DIFFERENCE, this allows one to not have it in their tickers.txt list.
+
 """
 
 # use for environment variables
@@ -207,14 +207,10 @@ def wait_for_price():
 
     pause_bot()
 
-    # get first element from the dictionary
-    firstcoin = next(iter(historical_prices[hsp_head]))  
+    if historical_prices[hsp_head]['BNB' + PAIR_WITH]['time'] > datetime.now() - timedelta(minutes=float(TIME_DIFFERENCE / RECHECK_INTERVAL)):
 
-    #BBif historical_prices[hsp_head]['BNB' + PAIR_WITH]['time'] > datetime.now() - timedelta(minutes=float(TIME_DIFFERENCE / RECHECK_INTERVAL)):
-    if historical_prices[hsp_head][firstcoin]['time'] > datetime.now() - timedelta(minutes=float(TIME_DIFFERENCE / RECHECK_INTERVAL)):
         # sleep for exactly the amount of time required
-        #BBtime.sleep((timedelta(minutes=float(TIME_DIFFERENCE / RECHECK_INTERVAL)) - (datetime.now() - historical_prices[hsp_head]['BNB' + PAIR_WITH]['time'])).total_seconds())    
-        time.sleep((timedelta(minutes=float(TIME_DIFFERENCE / RECHECK_INTERVAL)) - (datetime.now() - historical_prices[hsp_head][firstcoin]['time'])).total_seconds())    
+        time.sleep((timedelta(minutes=float(TIME_DIFFERENCE / RECHECK_INTERVAL)) - (datetime.now() - historical_prices[hsp_head]['BNB' + PAIR_WITH]['time'])).total_seconds())    
 
     # retrieve latest prices
     last_price = get_price()
@@ -376,12 +372,12 @@ def balance_report(last_price):
     
     #msg1 = str(bot_started_datetime) + " | " + str(datetime.now() - bot_started_datetime)
     msg1 = str(datetime.now())
-    msg2 = " | " + str(len(coins_bought)) + "/" + str(TRADE_SLOTS) + " | PBOT: " + str(bot_paused)
-    msg2 = msg2 + ' SPR%: ' + str(round(session_profit_incfees_perc,2)) + ' SPR$: ' + str(round(session_profit_incfees_total,4))
-    msg2 = msg2 + ' SPU%: ' + str(round(unrealised_session_profit_incfees_perc,2)) + ' SPU$: ' + str(round(unrealised_session_profit_incfees_total,4))
-    msg2 = msg2 + ' SPT%: ' + str(round(session_profit_incfees_perc + unrealised_session_profit_incfees_perc,2)) + ' SPT$: ' + str(round(session_profit_incfees_total+unrealised_session_profit_incfees_total,4))
-    msg2 = msg2 + ' ATP%: ' + str(round(historic_profit_incfees_perc,2)) + ' ATP$: ' + str(round(historic_profit_incfees_total,4))
-    msg2 = msg2 + ' CTT: ' + str(trade_wins+trade_losses) + ' CTW: ' + str(trade_wins) + ' CTL: ' + str(trade_losses) + ' CTWR%: ' + str(round(WIN_LOSS_PERCENT,2))
+    msg2 = " |  Trade Slots - " + str(len(coins_bought)) + "/" + str(TRADE_SLOTS) + " |  Bot Paused: " + str(bot_paused) + ' '
+    msg2 = msg2 + ' |  Profit $:' + str(round(session_profit_incfees_total,4)) + '  (' + str(round(session_profit_incfees_perc,2)) + '%) '
+    msg2 = msg2 + ' |  Unrealised $:' + str(round(unrealised_session_profit_incfees_total,4)) + '  (' + str(round(unrealised_session_profit_incfees_perc,2)) + '%) '
+    msg2 = msg2 + ' |  Session Profit $:' + str(round(session_profit_incfees_total+unrealised_session_profit_incfees_total,4))  + '  (' + str(round(session_profit_incfees_perc + unrealised_session_profit_incfees_perc,2)) + '%) '
+    msg2 = msg2 + ' |  All Time Profit $: ' + str(round(historic_profit_incfees_total,4)) + '  (' +   str(round(historic_profit_incfees_perc,2)) + '%) '
+    msg2 = msg2 + ' |  Total Trades: ' + str(trade_wins+trade_losses) + '  (Won: ' + str(trade_wins) + '  Lost: ' + str(trade_losses) + ') -  Win %: ' + str(round(WIN_LOSS_PERCENT,2))
 
     msg_discord_balance(msg1, msg2)
     history_log(session_profit_incfees_perc, session_profit_incfees_total, unrealised_session_profit_incfees_perc, unrealised_session_profit_incfees_total, session_profit_incfees_perc + unrealised_session_profit_incfees_perc, session_profit_incfees_total+unrealised_session_profit_incfees_total, historic_profit_incfees_perc, historic_profit_incfees_total, trade_wins+trade_losses, trade_wins, trade_losses, WIN_LOSS_PERCENT)
@@ -415,7 +411,7 @@ def msg_discord_balance(msg1, msg2):
             discord_msg_balance_data = msg2
         else:
             # ping msg to know the bot is still running
-            msg_discord(".")
+            msg_discord("...")
 
 def msg_discord(msg):
 
@@ -632,11 +628,6 @@ def sell_coins(tpsl_override = False):
                 # so you don't get stopped out of the trade prematurely
                 coins_bought[coin]['stop_loss'] = coins_bought[coin]['take_profit'] - TRAILING_STOP_LOSS
                 coins_bought[coin]['take_profit'] = PriceChange_Perc + TRAILING_TAKE_PROFIT
-
-            # we've got a negative stop loss - not good, we don't want this.
-            if coins_bought[coin]['stop_loss'] <= 0:
-                coins_bought[coin]['stop_loss'] = coins_bought[coin]['take_profit'] * .25
-                
             # if DEBUG: print(f"{coin} TP reached, adjusting TP {coins_bought[coin]['take_profit']:.2f}  and SL {coins_bought[coin]['stop_loss']:.2f} accordingly to lock-in profit")
             if DEBUG: print(f"{coin} TP reached, adjusting TP {coins_bought[coin]['take_profit']:.{decimals()}f} and SL {coins_bought[coin]['stop_loss']:.{decimals()}f} accordingly to lock-in profit")
             continue
@@ -654,15 +645,15 @@ def sell_coins(tpsl_override = False):
                 sellCoin = True
                 if USE_TRAILING_STOP_LOSS:
                     if PriceChange_Perc >= 0:
-                        sell_reason = "TTP " + str(TP) + " reached"
+                        sell_reason = "TTP "
                     else:
-                        sell_reason = "TSL " + str(SL) + " reached"
+                        sell_reason = "TSL "
                 else:
-                    sell_reason = "SL " + str(SL) + " reached"
-                sell_reason = sell_reason 
+                    sell_reason = "SL "    
+                sell_reason = sell_reason + str(TP) + " reached"
             if LastPrice > TP:
                 sellCoin = True
-                sell_reason = "TP " + str(TP) + " reached"
+                sell_reason = "TP " + str(SL) + " reached"
             if coin in externals:
                 sellCoin = True
                 sell_reason = 'External Sell Signal'
@@ -785,10 +776,9 @@ def extract_order_data(order_details):
         FILL_PRICE = float(fills['price'])
         FILL_QTY = float(fills['qty'])
         FILLS_FEE += float(fills['commission'])
-        
         # check if the fee was in BNB. If not, log a nice warning:
         if (fills['commissionAsset'] != 'BNB') and (TRADING_FEE == 0.075) and (BNB_WARNING == 0):
-            print(f"WARNING: BNB not used for trading fee, please enable it in Binance!")
+            print(f"WARNING: BNB not used for trading fee, please ")
             BNB_WARNING += 1
         # quantity of fills * price
         FILLS_TOTAL += (FILL_PRICE * FILL_QTY)

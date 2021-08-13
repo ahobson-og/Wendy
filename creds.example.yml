@@ -3,11 +3,14 @@
 # Bad:
 #   access_key:myaccess_key
 # Good:
-#   access_key: myaccess_key 
-
+#   access_key: myaccess_key
 
 prod:
   access_key: replace_me
   secret_key: replace_me
+
+# E.G DISCORD_WEBHOOK: Only add the XXX/YYYY from Discord Webhook which should look like this: https://discord.com/api/webhooks/XXXX/YYYYY
+
 discord:
-  DISCORD_WEBHOOK: https://discord.com/api/webhooks/XXX/YYYYY
+  DISCORD_WEBHOOK: XXXX/YYYYY
+
